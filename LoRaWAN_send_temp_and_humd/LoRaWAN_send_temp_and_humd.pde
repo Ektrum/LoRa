@@ -8,6 +8,7 @@
 
 #include <WaspLoRaWAN.h>
 #include <WaspSensorAgr_v20.h>
+#include <LoraMessage.h>
 
 // LoRaWAN radio socket
 uint8_t socket = SOCKET0;
@@ -304,17 +305,19 @@ void loop()
     USB.print(F("\nHumidity: "));
     USB.println(humidity);
 
-    // Need to send values in hexadecimal. Convert floats to fixed point with two decimal places
-    uint16_t i_temp = (uint16_t) (temperature * 100);
-    uint16_t i_humd = (uint16_t) (humidity * 100);
-
-    // Convert values to hex string and concatenate in data message buffer
-    itoa(i_temp, data, 16);
-    itoa(i_humd, &data[strlen(data)], 16);
+    // Use the LoraMessage lib
+    message.addTemperature(temperature);
+    message.addHumidity(humidity);
 
     USB.println(F("3. Sending Unconfirmed packet..."));
 
-    error = LoRaWAN.sendUnconfirmed(PORT, data);
+    // DEBUG - try to send via LoraMessage lib
+    USB.println(F("message="));
+    USB.println(message.getMessage());
+
+    error = LoRaWAN.sendUnconfirmed(PORT, message.getMessage());
+
+    message.clear();
 
     // Error messages:
     /*
